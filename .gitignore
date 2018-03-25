@@ -1,0 +1,7 @@
+.idea
+/vendor/
+git rm --cached --force ".idea/vcs.xml"
+git rm --cached --force ".idea/misc.xml"
+git rm --cached --force ".idea/modules.xml"
+git rm --cached --force ".idea/.name"
+git rm --cached --force ".idea/graphql-assent.iml"
