@@ -1,25 +1,28 @@
 package user
 
 import (
-	"github.com/jinzhu/gorm"
-	"fmt"
-	"os"
-	"golang.org/x/crypto/argon2"
+	"graphql-assent/pkg/orm"
 )
 
 type Model struct {
-	gorm.Model
+	orm.PK
 	Email       string
 	Password    string
-	NewPassword []byte `gorm:"-"`
+	NewPassword string `gorm:"-"`
+	orm.Timestamps
+}
+
+func (m Model) TableName() string {
+	return "users"
 }
 
 func (m *Model) BeforeSave() (err error) {
-	if m.NewPassword != nil {
-		p := argon2.Key(m.NewPassword, []byte("test"), 2, 1024, 2, 32)
-		fmt.Println(string(p))
-		os.Exit(1)
-		m.NewPassword = nil
+	if m.NewPassword != "" {
+		m.Password, err = HashPassword(m.NewPassword)
+
+		if err != nil {
+			return err
+		}
 	}
 	return
 }
