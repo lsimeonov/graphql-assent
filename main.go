@@ -1,31 +1,35 @@
 package main
 
 import (
-	"graphql-assent/pkg/conf"
-
-	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"graphql-assent/pkg/conf"
 	"graphql-assent/pkg/user"
 )
 
 func main() {
 	c := conf.Init("configs", "config.dev")
 
-	db, err := gorm.Open("mysql", c.DB.MarshallString())
-
-	//init1(db)
+	pa, err := user.NewPwdAlgo(c.General.PasswordAlgo)
 	if err != nil {
 		panic(err)
 	}
+	user.Config.PAlgo = pa
 
-	var u user.Model
+	db, err := gorm.Open("mysql", c.DB.MarshallString())
 
-	db.Where("email = ?", "test@example.com").First(&u)
-
-	match, _ := user.CompareHashWithPassword(u.Password, "sd")
-
-	fmt.Println(match)
+	if err != nil {
+		panic(err)
+	}
+	init1(db)
+	//
+	//var u user.Model
+	//
+	//db.Where("email = ?", "test@example.com").First(&u)
+	//
+	//match, _ := user.CompareHashWithPassword(u.Password, "sd")
+	//
+	//fmt.Println(match)
 
 	defer db.Close()
 }

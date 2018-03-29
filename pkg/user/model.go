@@ -6,7 +6,7 @@ import (
 
 type Model struct {
 	orm.PK
-	Email       string
+	Email       string `gorm:"unique"`
 	Password    string
 	NewPassword string `gorm:"-"`
 	orm.Timestamps
@@ -18,11 +18,13 @@ func (m Model) TableName() string {
 
 func (m *Model) BeforeSave() (err error) {
 	if m.NewPassword != "" {
-		m.Password, err = HashPassword(m.NewPassword)
+
+		m.Password, err = Config.PAlgo.HashPassword(m.NewPassword)
 
 		if err != nil {
 			return err
 		}
 	}
+
 	return
 }

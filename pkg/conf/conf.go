@@ -1,8 +1,8 @@
 package conf
 
 import (
-	"github.com/spf13/viper"
 	"fmt"
+	"github.com/spf13/viper"
 )
 
 type db struct {
@@ -15,15 +15,15 @@ type db struct {
 	Loc       string
 }
 
-type gen struct {
-	Secret string
+type general struct {
+	Secret       string
+	PasswordAlgo string
 }
 
 type Conf struct {
-	DB db
-	General gen
+	DB      db
+	General general
 }
-
 
 func Init(path string, name string) Conf {
 	viper.SetConfigName(name)
@@ -34,7 +34,7 @@ func Init(path string, name string) Conf {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-	c := Conf{db{}, gen{}}
+	c := Conf{db{}, general{}}
 
 	err = viper.UnmarshalKey("Database", &c.DB)
 	if err != nil {
