@@ -30,8 +30,8 @@ func TestModel_BeforeSave_Pass(t *testing.T) {
 	a := assert.New(t)
 
 	pa := new(mocks.PwdAlgo)
-	pa.On("HashPassword", "test").Return("hash", nil)
-	user.Config.PAlgo = pa
+	pa.On("Hash", "test").Return("hash", nil)
+	user.Services.Pwd = pa
 
 	m := user.Model{NewPassword: "test"}
 

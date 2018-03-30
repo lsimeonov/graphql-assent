@@ -19,7 +19,7 @@ func (m Model) TableName() string {
 func (m *Model) BeforeSave() (err error) {
 	if m.NewPassword != "" {
 
-		m.Password, err = Config.PAlgo.HashPassword(m.NewPassword)
+		m.Password, err = Services.Pwd.Hash(m.NewPassword)
 
 		if err != nil {
 			return err

@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	a2Crypto "golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/argon2"
 	"strconv"
 	"strings"
 )
@@ -21,33 +21,40 @@ const (
 )
 
 type PwdAlgo interface {
-	HashPassword(p string) (h string, err error)
-	CompareHashWithPassword(hash, password string) (bool, error)
+	Hash(p string) (h string, err error)
+	Compare(hash, password string) (bool, error)
+}
+
+type IArgon2 interface {
+	Key(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte
+	GenerateSalt(size int) (s string, err error)
+	EncodeToString([]byte) string
 }
 
 type Argon2 struct {
 }
 
-func NewPwdAlgo(algo string) (pa PwdAlgo, err error) {
-	uAlgo := strings.Title(algo)
-
-	switch uAlgo {
-	case "Argon2":
-		return Argon2{}, nil
-	default:
-		return nil, errors.New(fmt.Sprintf("unsupported password algorithm %s", algo))
-	}
+type PwdArgon2 struct {
+	Crypto IArgon2
 }
 
-func (pwd Argon2) HashPassword(p string) (h string, err error) {
-	salt, err := pwd.generateSalt()
+func NewPwdAlgo(algo string) (pa PwdAlgo, err error) {
+	if strings.EqualFold("argon2", algo) {
+		return PwdArgon2{Argon2{}}, nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("unsupported password algorithm %s", algo))
+}
+
+func (pwd PwdArgon2) Hash(p string) (h string, err error) {
+	salt, err := pwd.Crypto.GenerateSalt(maxSaltSize)
 
 	if err != nil {
 		return "", err
 	}
 
-	unEncodedHash := a2Crypto.Key([]byte(p), []byte(salt), argon2Time, argon2Memory, argon2Threads, argon2KeySize)
-	encodedHash := base64.StdEncoding.EncodeToString(unEncodedHash)
+	unEncodedHash := pwd.Crypto.Key([]byte(p), []byte(salt), argon2Time, argon2Memory, argon2Threads, argon2KeySize)
+	encodedHash := pwd.Crypto.EncodeToString(unEncodedHash)
 
 	hash := fmt.Sprintf("%s$%d$%d$%d$%d$%s$%s",
 		passwordType, argon2Time, argon2Memory, argon2Threads, argon2KeySize, salt, encodedHash)
@@ -55,7 +62,7 @@ func (pwd Argon2) HashPassword(p string) (h string, err error) {
 	return hash, nil
 }
 
-func (pwd Argon2) CompareHashWithPassword(hash, password string) (bool, error) {
+func (pwd PwdArgon2) Compare(hash, password string) (bool, error) {
 	if len(hash) == 0 || len(password) == 0 {
 		return false, errors.New("arguments cannot be zero length")
 	}
@@ -67,7 +74,7 @@ func (pwd Argon2) CompareHashWithPassword(hash, password string) (bool, error) {
 	salt := []byte(hashParts[5])
 	key, _ := base64.StdEncoding.DecodeString(hashParts[6])
 
-	calculatedKey := a2Crypto.Key([]byte(password), salt, uint32(time), uint32(memory), uint8(threads), uint32(keySize))
+	calculatedKey := pwd.Crypto.Key([]byte(password), salt, uint32(time), uint32(memory), uint8(threads), uint32(keySize))
 
 	if subtle.ConstantTimeCompare(key, calculatedKey) != 1 {
 		return false, errors.New("password did not match")
@@ -76,11 +83,19 @@ func (pwd Argon2) CompareHashWithPassword(hash, password string) (bool, error) {
 	return true, nil
 }
 
-func (pwd Argon2) generateSalt() (s string, err error) {
-	unencodedSalt := make([]byte, maxSaltSize)
+func (c Argon2) GenerateSalt(size int) (s string, err error) {
+	unencodedSalt := make([]byte, size)
 	_, err = rand.Read(unencodedSalt)
 	if err != nil {
 		return s, err
 	}
 	return base64.StdEncoding.EncodeToString(unencodedSalt), nil
+}
+
+func (c Argon2) Key(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+	return argon2.Key(password, salt, time, memory, threads, keyLen)
+}
+
+func (c Argon2) EncodeToString(s []byte) string {
+	return base64.StdEncoding.EncodeToString(s)
 }

@@ -8,8 +8,8 @@ type PwdAlgo struct {
 	mock.Mock
 }
 
-// CompareHashWithPassword provides a mock function with given fields: hash, password
-func (_m *PwdAlgo) CompareHashWithPassword(hash string, password string) (bool, error) {
+// Compare provides a mock function with given fields: hash, password
+func (_m *PwdAlgo) Compare(hash string, password string) (bool, error) {
 	ret := _m.Called(hash, password)
 
 	var r0 bool
@@ -29,8 +29,8 @@ func (_m *PwdAlgo) CompareHashWithPassword(hash string, password string) (bool, 
 	return r0, r1
 }
 
-// HashPassword provides a mock function with given fields: p
-func (_m *PwdAlgo) HashPassword(p string) (string, error) {
+// Hash provides a mock function with given fields: p
+func (_m *PwdAlgo) Hash(p string) (string, error) {
 	ret := _m.Called(p)
 
 	var r0 string

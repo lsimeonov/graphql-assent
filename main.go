@@ -14,7 +14,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	user.Config.PAlgo = pa
+	user.Services.Pwd = pa
 
 	db, err := gorm.Open("mysql", c.DB.MarshallString())
 
@@ -27,7 +27,7 @@ func main() {
 	//
 	//db.Where("email = ?", "test@example.com").First(&u)
 	//
-	//match, _ := user.CompareHashWithPassword(u.Password, "sd")
+	//match, _ := user.Compare(u.Password, "sd")
 	//
 	//fmt.Println(match)
 
